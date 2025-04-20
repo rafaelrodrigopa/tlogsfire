@@ -1,0 +1,66 @@
+/* Cores personalizadas */
+:root {
+  --orange: #FF5E14;
+  --orange-dark: #e04a00;
+}
+
+/* Classes utilitárias adicionais */
+.bg-orange {
+  background-color: var(--orange) !important;
+}
+
+.btn-orange {
+  background-color: var(--orange);
+  color: white;
+}
+
+.btn-orange:hover {
+  background-color: var(--orange-dark);
+  color: white;
+}
+
+.border-orange {
+  border-color: var(--orange) !important;
+}
+
+.border-bottom-orange {
+  border-bottom: 1px solid var(--orange) !important;
+}
+
+.border-top-orange {
+  border-top: 1px solid var(--orange) !important;
+}
+
+.text-orange {
+  color: var(--orange) !important;
+}
+
+.btn-outline-orange {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
+.btn-outline-orange:hover {
+  background-color: var(--orange);
+  color: white;
+}
+
+/* Ajuste para inputs dark */
+.bg-dark.input-group-text {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.bg-dark.form-control {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+}
+
+/* Animação de fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
