@@ -14,7 +14,9 @@ const CategoryManagement = () => {
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
-    imageUrl: ''
+    imageUrl: '',
+    active: true, // Novo campo
+    color: '#6c757d' // Novo campo
   });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -125,7 +127,9 @@ const CategoryManagement = () => {
     setNewCategory({
       name: category.name,
       description: category.description || '',
-      imageUrl: category.imageUrl || ''
+      imageUrl: category.imageUrl || '',
+      active: category.active !== undefined ? category.active : true,
+      color: category.color || '#6c757d'
     });
   };
 
@@ -352,16 +356,55 @@ const CategoryManagement = () => {
                 </button>
               </div>
             </div>
+
+            <div className="col-md-3">
+                <div className="form-check form-switch">
+                <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="active"
+                    name="active"
+                    checked={newCategory.active}
+                    onChange={(e) => setNewCategory(prev => ({
+                    ...prev,
+                    active: e.target.checked
+                    }))}
+                />
+                <label className="form-check-label" htmlFor="active">
+                    Categoria ativa
+                </label>
+                </div>
+            </div>
+
+            {/*<div className="col-md-3">
+                <label htmlFor="color" className="form-label">
+                Cor
+                </label>
+                <input
+                type="color"
+                className="form-control form-control-color"
+                id="color"
+                name="color"
+                value={newCategory.color}
+                onChange={(e) => setNewCategory(prev => ({
+                    ...prev,
+                    color: e.target.value
+                }))}
+                title="Escolha uma cor"
+                />
+            </div>*/}
           </form>
 
           <div className="table-responsive">
             <table className="table table-striped table-hover">
               <thead className="table-light">
                 <tr>
-                  <th>Imagem</th>
-                  <th>Nome</th>
-                  <th>Descrição</th>
-                  <th>Ações</th>
+                <th>Status</th>
+                <th>Imagem</th>
+                <th>Nome</th>
+                {/*<th>Cor</th>*/}
+                <th>Descrição</th>
+                <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -382,6 +425,11 @@ const CategoryManagement = () => {
                 ) : (
                   categories.map(category => (
                     <tr key={category.id}>
+                        <td>
+                            <span className={`badge ${category.active ? 'bg-success' : 'bg-secondary'}`}>
+                            {category.active ? 'Ativa' : 'Inativa'}
+                            </span>
+                        </td>
                       <td>
                         {category.imageUrl ? (
                           <img 
@@ -401,6 +449,17 @@ const CategoryManagement = () => {
                         )}
                       </td>
                       <td>{category.name}</td>
+                      {/*<td>
+                            <div 
+                            style={{
+                                width: '20px',
+                                height: '20px',
+                                backgroundColor: category.color,
+                                borderRadius: '50%',
+                                display: 'inline-block'
+                            }}
+                            />
+                        </td>*/}
                       <td>{category.description || '-'}</td>
                       <td>
                         <div className="d-flex gap-2">

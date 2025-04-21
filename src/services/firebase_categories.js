@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 // Adicione no início do arquivo
 import Resizer from 'react-image-file-resizer';
 import { 
-  collection, getDocs, addDoc, doc, updateDoc, deleteDoc 
+  collection, getDocs, addDoc, doc, updateDoc, deleteDoc, serverTimestamp
 } from 'firebase/firestore';
 import { 
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject 
@@ -47,69 +47,6 @@ export const uploadImage = async (file) => {
     }
   };
 
-  // Adicione esta função para redimensionar imagens no cliente
-const resizeImage = (file) => new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_SIZE = 800;
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > height) {
-          if (width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          }
-        } else {
-          if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        canvas.toBlob(resolve, 'image/jpeg', 0.7);
-      };
-    };
-    reader.readAsDataURL(file);
-  });
-
-  const resizeFile = (file) => new Promise((resolve, reject) => {
-    Resizer.imageFileResizer(
-      file,
-      800,                   // Largura máxima
-      800,                   // Altura máxima
-      'JPEG',                // Formato de saída
-      70,                    // Qualidade
-      0,                     // Rotação
-      (uri) => {
-        // Verifica se o resultado é válido
-        if (!uri) {
-          reject(new Error('Falha no redimensionamento'));
-          return;
-        }
-        
-        // Converte DataURL para Blob se necessário
-        if (typeof uri === 'string') {
-          fetch(uri)
-            .then(res => res.blob())
-            .then(resolve)
-            .catch(reject);
-        } else {
-          resolve(uri);
-        }
-      },
-      'blob'                // Saída como Blob (mais eficiente)
-    );
-  });
   
 
 export const deleteImage = async (imageUrl) => {
@@ -124,42 +61,51 @@ export const deleteImage = async (imageUrl) => {
 };
 
 export const addCategory = async (categoryData) => {
-  try {
-    const auth = getAuth();
-    if (!auth.currentUser) {
-      throw new Error("Usuário não autenticado");
+    try {
+      const auth = getAuth();
+      if (!auth.currentUser) {
+        throw new Error("Usuário não autenticado");
+      }
+  
+      const docRef = await addDoc(collection(db, 'categories'), {
+        name: categoryData.name,
+        description: categoryData.description || '',
+        imageUrl: categoryData.imageUrl || '',
+        active: categoryData.active !== undefined ? categoryData.active : true,
+        color: categoryData.color || '#6c757d',
+        createdAt: serverTimestamp(), // Agora funcionará
+        createdBy: auth.currentUser.uid
+      });
+      
+      return docRef.id;
+    } catch (error) {
+      console.error("Erro ao adicionar categoria:", error);
+      throw error;
     }
+  };
 
-    const docRef = await addDoc(collection(db, 'categories'), {
-      ...categoryData,
-      createdBy: auth.currentUser.uid,
-      createdAt: new Date()
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error("Erro ao adicionar categoria:", error);
-    throw error;
-  }
-};
-
-export const updateCategory = async (id, categoryData, oldImageUrl) => {
-  try {
-    // Se tiver nova imagem, deleta a antiga
-    if (categoryData.imageUrl && oldImageUrl) {
-      await deleteImage(oldImageUrl);
+  export const updateCategory = async (id, categoryData, oldImageUrl) => {
+    try {
+      if (categoryData.imageUrl && oldImageUrl && categoryData.imageUrl !== oldImageUrl) {
+        await deleteImage(oldImageUrl);
+      }
+      
+      const categoryRef = doc(db, 'categories', id);
+      await updateDoc(categoryRef, {
+        name: categoryData.name,
+        description: categoryData.description,
+        imageUrl: categoryData.imageUrl,
+        active: categoryData.active,
+        color: categoryData.color,
+        updatedAt: serverTimestamp() // Adicionando timestamp de atualização
+      });
+      
+      return id;
+    } catch (error) {
+      console.error("Erro ao atualizar categoria:", error);
+      throw error;
     }
-    
-    const categoryRef = doc(db, 'categories', id);
-    await updateDoc(categoryRef, {
-      ...categoryData,
-      updatedAt: new Date()
-    });
-    return id;
-  } catch (error) {
-    console.error("Erro ao atualizar categoria:", error);
-    throw error;
-  }
-};
+  };
 
 export const deleteCategory = async (category) => {
   try {
