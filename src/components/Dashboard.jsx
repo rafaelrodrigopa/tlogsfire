@@ -19,6 +19,7 @@ import {
 import { auth } from '../firebase/config';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import UserManagement from "./Dashboard/screens/UserManagement";
 
 const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -49,7 +50,7 @@ const Dashboard = () => {
   const renderContent = () => {
     switch (activeMenu) {
       case 'users':
-        return <UserManagement />;
+        return <UserManagement />; 
       case 'products':
         return <ProductManagement />;
       case 'categories':
@@ -404,7 +405,7 @@ const DashboardHome = () => {
   );
 };
 
-const UserManagement = () => {
+{/*const UserManagement = () => {
   const [users, setUsers] = useState([
     { id: 1, name: 'Admin', email: 'admin@example.com', role: 'Administrador', status: 'Ativo' },
     { id: 2, name: 'Gerente', email: 'gerente@example.com', role: 'Gerente', status: 'Ativo' },
@@ -459,7 +460,7 @@ const UserManagement = () => {
       </div>
     </div>
   );
-};
+};*/}
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([
