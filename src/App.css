@@ -1,0 +1,9 @@
+/* No seu arquivo CSS global */
+.category-img {
+    width: 100%;
+    height: auto;
+    max-width: 200px;
+    border-radius: 4px;
+    object-fit: cover;
+    aspect-ratio: 1/1; /* Mantém proporção quadrada */
+  }

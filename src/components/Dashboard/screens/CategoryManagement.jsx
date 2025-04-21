@@ -1,23 +1,28 @@
-import { useState, useEffect } from 'react';
-import { FiGrid, FiEdit, FiTrash2, FiX, FiAlertTriangle } from 'react-icons/fi';
+import { useState, useEffect, useRef } from 'react';
+import { FiGrid, FiEdit, FiTrash2, FiX, FiAlertTriangle, FiImage, FiUpload } from 'react-icons/fi';
 import { 
   getCategories, 
   addCategory, 
   updateCategory, 
-  deleteCategory 
+  deleteCategory,
+  uploadImage
 } from '../../../services/firebase_categories';
+
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState({
     name: '',
-    description: ''
+    description: '',
+    imageUrl: ''
   });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadCategories();
@@ -44,6 +49,47 @@ const CategoryManagement = () => {
     }));
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+  
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Preview temporário
+      setNewCategory(prev => ({
+        ...prev,
+        imageUrl: URL.createObjectURL(file)
+      }));
+      
+      //const resizedImage = await resizeImage(file);
+  
+      // Verificação simples
+      if (!file.type.match('image.*')) {
+        throw new Error('Apenas imagens são permitidas');
+      }
+  
+      // Upload com tratamento de CORS
+      const imageUrl = await uploadImage(file);
+      
+      setNewCategory(prev => ({
+        ...prev,
+        imageUrl
+      }));
+  
+    } catch (error) {
+      console.error('Erro:', error);
+      setError(error.message);
+      setNewCategory(prev => ({
+        ...prev,
+        imageUrl: ''
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -55,7 +101,12 @@ const CategoryManagement = () => {
       }
 
       if (editingId) {
-        await updateCategory(editingId, newCategory);
+        const categoryToUpdate = categories.find(c => c.id === editingId);
+        await updateCategory(
+          editingId, 
+          newCategory,
+          categoryToUpdate.imageUrl
+        );
       } else {
         await addCategory(newCategory);
       }
@@ -73,8 +124,13 @@ const CategoryManagement = () => {
     setEditingId(category.id);
     setNewCategory({
       name: category.name,
-      description: category.description || ''
+      description: category.description || '',
+      imageUrl: category.imageUrl || ''
     });
+  };
+
+  const handleRemoveImage = () => {
+    setNewCategory(prev => ({ ...prev, imageUrl: '' }));
   };
 
   const confirmDelete = (category) => {
@@ -85,7 +141,7 @@ const CategoryManagement = () => {
   const handleDelete = async () => {
     try {
       setLoading(true);
-      await deleteCategory(categoryToDelete.id);
+      await deleteCategory(categoryToDelete);
       await loadCategories();
       setShowDeleteModal(false);
     } catch (error) {
@@ -98,9 +154,14 @@ const CategoryManagement = () => {
   const resetForm = () => {
     setNewCategory({
       name: '',
-      description: ''
+      description: '',
+      imageUrl: ''
     });
     setEditingId(null);
+    setUploadProgress(0);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -173,7 +234,7 @@ const CategoryManagement = () => {
           
           <form onSubmit={handleSubmit} className="mb-4">
             <div className="row g-3">
-              <div className="col-md-5">
+              <div className="col-md-4">
                 <label htmlFor="name" className="form-label">
                   Nome da Categoria*
                 </label>
@@ -188,7 +249,7 @@ const CategoryManagement = () => {
                   required
                 />
               </div>
-              <div className="col-md-5">
+              <div className="col-md-4">
                 <label htmlFor="description" className="form-label">
                   Descrição
                 </label>
@@ -202,17 +263,72 @@ const CategoryManagement = () => {
                   disabled={loading}
                 />
               </div>
-              <div className="col-md-2 d-flex align-items-end gap-2">
-                <button 
-                  type="submit" 
-                  className="btn btn-primary flex-grow-1" 
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="spinner-border spinner-border-sm me-1" />
-                  ) : null}
-                  {editingId ? 'Atualizar' : 'Adicionar'}
-                </button>
+              <div className="col-md-4">
+                <label className="form-label">
+                  Imagem
+                </label>
+                <div className="d-flex gap-2">
+                  <div className="flex-grow-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={loading}
+                      className="form-control"
+                      style={{ display: 'none' }}
+                      id="imageUpload"
+                    />
+                    <label 
+                      htmlFor="imageUpload" 
+                      className="btn btn-outline-secondary w-100"
+                    >
+                      <FiUpload className="me-1" />
+                      {newCategory.imageUrl ? 'Alterar' : 'Selecionar'}
+                    </label>
+                  </div>
+                  {newCategory.imageUrl && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger"
+                      onClick={handleRemoveImage}
+                      disabled={loading}
+                    >
+                      <FiX />
+                    </button>
+                  )}
+                </div>
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="progress mt-2">
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated" 
+                      role="progressbar" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                )}
+              </div>
+              
+              {newCategory.imageUrl && (
+                <div className="col-12">
+                  <div className="d-flex align-items-center gap-3">
+                    <img 
+                      src={newCategory.imageUrl} 
+                      alt="Preview" 
+                      style={{ 
+                        maxWidth: '100px', 
+                        maxHeight: '100px',
+                        borderRadius: '4px'
+                      }} 
+                    />
+                    <small className="text-muted">
+                      Imagem selecionada
+                    </small>
+                  </div>
+                </div>
+              )}
+              
+              <div className="col-12 d-flex justify-content-end gap-2">
                 {editingId && (
                   <button
                     type="button"
@@ -220,9 +336,20 @@ const CategoryManagement = () => {
                     onClick={resetForm}
                     disabled={loading}
                   >
-                    <FiX />
+                    <FiX className="me-1" />
+                    Cancelar
                   </button>
                 )}
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="spinner-border spinner-border-sm me-1" />
+                  ) : null}
+                  {editingId ? 'Atualizar' : 'Adicionar'}
+                </button>
               </div>
             </div>
           </form>
@@ -231,6 +358,7 @@ const CategoryManagement = () => {
             <table className="table table-striped table-hover">
               <thead className="table-light">
                 <tr>
+                  <th>Imagem</th>
                   <th>Nome</th>
                   <th>Descrição</th>
                   <th>Ações</th>
@@ -239,7 +367,7 @@ const CategoryManagement = () => {
               <tbody>
                 {loading && categories.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="text-center py-4">
+                    <td colSpan="4" className="text-center py-4">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Carregando...</span>
                       </div>
@@ -247,13 +375,31 @@ const CategoryManagement = () => {
                   </tr>
                 ) : categories.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className="text-center py-4">
+                    <td colSpan="4" className="text-center py-4">
                       Nenhuma categoria encontrada
                     </td>
                   </tr>
                 ) : (
                   categories.map(category => (
                     <tr key={category.id}>
+                      <td>
+                        {category.imageUrl ? (
+                          <img 
+                            src={category.imageUrl} 
+                            alt={category.name}
+                            style={{ 
+                              width: '50px', 
+                              height: '50px',
+                              objectFit: 'cover',
+                              borderRadius: '4px'
+                            }} 
+                          />
+                        ) : (
+                          <div className="text-muted">
+                            <FiImage size={20} />
+                          </div>
+                        )}
+                      </td>
                       <td>{category.name}</td>
                       <td>{category.description || '-'}</td>
                       <td>
