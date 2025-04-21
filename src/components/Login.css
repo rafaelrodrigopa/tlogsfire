@@ -2,15 +2,16 @@
 :root {
   --orange: #FF5E14;
   --orange-dark: #e04a00;
+  --azul-olho: #07E6E9
 }
 
 /* Classes utilitárias adicionais */
 .bg-orange {
-  background-color: var(--orange) !important;
+  background-color: var(--azul-olho) !important;
 }
 
 .btn-orange {
-  background-color: var(--orange);
+  background-color: var(--azul-olho);
   color: white;
 }
 
@@ -20,28 +21,28 @@
 }
 
 .border-orange {
-  border-color: var(--orange) !important;
+  border-color: var(--azul-olho) !important;
 }
 
 .border-bottom-orange {
-  border-bottom: 1px solid var(--orange) !important;
+  border-bottom: 1px solid var(--azul-olho) !important;
 }
 
 .border-top-orange {
-  border-top: 1px solid var(--orange) !important;
+  border-top: 1px solid var(--azul-olho) !important;
 }
 
 .text-orange {
-  color: var(--orange) !important;
+  color: var(--azul-olho) !important;
 }
 
 .btn-outline-orange {
-  color: var(--orange);
-  border-color: var(--orange);
+  color: var(--azul-olho);
+  border-color: var(--azul-olho);
 }
 
 .btn-outline-orange:hover {
-  background-color: var(--orange);
+  background-color: var(--azul-olho);
   color: white;
 }
 
