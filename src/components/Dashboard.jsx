@@ -20,6 +20,7 @@ import { auth } from '../firebase/config';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import UserManagement from "./Dashboard/screens/UserManagement";
+import CategoryManagement from './Dashboard/screens/CategoryManagement';
 
 const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -519,7 +520,7 @@ const ProductManagement = () => {
   );
 };
 
-const CategoryManagement = () => {
+{/*const CategoryManagement = () => {
   const [categories, setCategories] = useState([
     { id: 1, name: 'Peças', products: 45 },
     { id: 2, name: 'Acessórios', products: 32 },
@@ -584,7 +585,7 @@ const CategoryManagement = () => {
       </div>
     </div>
   );
-};
+};*/}
 
 const OrderManagement = () => {
   return (
