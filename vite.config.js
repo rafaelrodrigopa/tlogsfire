@@ -1,11 +1,15 @@
+import { defineConfig } from 'vite'; // Importe esta linha
+import react from '@vitejs/plugin-react';
+
+// Configuração correta
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
-      '/v0': {
-        target: 'https://firebasestorage.googleapis.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/v0/, '')
+    port: 3000, // Opcional: define a porta
+    proxy: {    // Opcional: configura proxy se necessário
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
       }
     }
   }
