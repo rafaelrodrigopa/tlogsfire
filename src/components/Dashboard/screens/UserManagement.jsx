@@ -8,7 +8,8 @@ import {
   FiRefreshCw,
   FiLock,
   FiMail,
-  FiX
+  FiX,
+  FiAlertTriangle
 } from 'react-icons/fi';
 import { 
   listUsers, 
@@ -22,6 +23,8 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [newUser, setNewUser] = useState({
     email: '',
     password: '',
@@ -60,6 +63,7 @@ const UserManagement = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       await registerUser(
         newUser.email, 
         newUser.password, 
@@ -78,43 +82,70 @@ const UserManagement = () => {
       await fetchUsers();
     } catch (error) {
       setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Cabeçalho e botões */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Usuários</h2>
-        </div>
-        
-        <div className="flex gap-2">
-          <button 
-            className="btn btn-primary"
-            onClick={fetchUsers}
-            disabled={loading}
-          >
-            <FiRefreshCw className={`mr-1 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
-          </button>
-          
-          {currentUser && (
-            <button 
-              className="btn btn-success"
-              onClick={() => setShowRegisterModal(true)}
-            >
-              <FiPlus className="mr-1" />
-              Novo Usuário
-            </button>
-          )}
-        </div>
-      </div>
+  const confirmDelete = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
 
-      {/* Modal de cadastro - Bootstrap puro */}
+  return (
+    <div className="container mt-4">
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">
+                  <FiAlertTriangle className="me-2" />
+                  Confirmar Exclusão
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close btn-close-white" 
+                  onClick={() => setShowDeleteModal(false)}
+                />
+              </div>
+              <div className="modal-body">
+                <p>Tem certeza que deseja excluir o usuário <strong>{userToDelete?.displayName || userToDelete?.email}</strong>?</p>
+                <p className="text-muted">Esta ação não pode ser desfeita.</p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary" 
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={() => handleDelete()}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="spinner-border spinner-border-sm me-1" />
+                  ) : (
+                    <FiTrash2 className="me-1" />
+                  )}
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Cadastro */}
       {showRegisterModal && (
-        <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered" role="document">
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Cadastrar Novo Usuário</h5>
@@ -122,18 +153,17 @@ const UserManagement = () => {
                   type="button" 
                   className="btn-close" 
                   onClick={() => setShowRegisterModal(false)}
-                  aria-label="Close"
-                >
-                  <FiX />
-                </button>
+                  disabled={loading}
+                />
               </div>
               <form onSubmit={handleRegister}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Nome</label>
+                    <label htmlFor="displayName" className="form-label">Nome</label>
                     <input
                       type="text"
                       className="form-control"
+                      id="displayName"
                       value={newUser.displayName}
                       onChange={(e) => setNewUser({...newUser, displayName: e.target.value})}
                       required
@@ -141,14 +171,15 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <label className="form-label">E-mail</label>
+                    <label htmlFor="email" className="form-label">E-mail</label>
                     <div className="input-group">
                       <span className="input-group-text">
-                        <FiMail className="text-gray-400" />
+                        <FiMail />
                       </span>
                       <input
                         type="email"
                         className="form-control"
+                        id="email"
                         value={newUser.email}
                         onChange={(e) => setNewUser({...newUser, email: e.target.value})}
                         required
@@ -157,14 +188,15 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <label className="form-label">Senha</label>
+                    <label htmlFor="password" className="form-label">Senha</label>
                     <div className="input-group">
                       <span className="input-group-text">
-                        <FiLock className="text-gray-400" />
+                        <FiLock />
                       </span>
                       <input
                         type="password"
                         className="form-control"
+                        id="password"
                         value={newUser.password}
                         onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                         minLength={6}
@@ -175,9 +207,10 @@ const UserManagement = () => {
                   </div>
                   
                   <div className="mb-3">
-                    <label className="form-label">Tipo de Usuário</label>
+                    <label htmlFor="role" className="form-label">Tipo de Usuário</label>
                     <select
                       className="form-select"
+                      id="role"
                       value={newUser.role}
                       onChange={(e) => setNewUser({...newUser, role: e.target.value})}
                     >
@@ -186,13 +219,23 @@ const UserManagement = () => {
                     </select>
                   </div>
                   
-                  {error && <div className="alert alert-danger">{error}</div>}
+                  {error && (
+                    <div className="alert alert-danger d-flex justify-content-between align-items-center">
+                      <span>{error}</span>
+                      <button 
+                        type="button" 
+                        className="btn-close" 
+                        onClick={() => setError(null)}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button 
                     type="button" 
-                    className="btn btn-secondary"
+                    className="btn btn-outline-secondary"
                     onClick={() => setShowRegisterModal(false)}
+                    disabled={loading}
                   >
                     Cancelar
                   </button>
@@ -202,11 +245,9 @@ const UserManagement = () => {
                     disabled={loading}
                   >
                     {loading ? (
-                      <>
-                        <FiLoader className="animate-spin me-1" />
-                        Cadastrando...
-                      </>
-                    ) : 'Cadastrar'}
+                      <span className="spinner-border spinner-border-sm me-1" />
+                    ) : null}
+                    Cadastrar
                   </button>
                 </div>
               </form>
@@ -215,51 +256,105 @@ const UserManagement = () => {
         </div>
       )}
 
-      {/* Tabela de usuários */}
-      <div className="overflow-x-auto">
-        <table className="table w-full">
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Tipo</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="text-center">
-                  <FiLoader className="animate-spin text-2xl" />
-                </td>
-              </tr>
-            ) : (
-              users.map(user => (
-                <tr key={user.uid}>
-                  <td>{user.displayName}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`badge ${user.role === 'admin' ? 'bg-primary' : 'bg-secondary'}`}>
-                      {user.role === 'admin' ? 'Administrador' : 'Usuário'}
-                    </span>
-                  </td>
-                  <td className="flex gap-2">
-                    <button className="btn btn-sm btn-outline-primary">
-                      <FiEdit />
-                    </button>
-                    <button className="btn btn-sm btn-outline-danger">
-                      <FiTrash2 />
-                    </button>
-                  </td>
-                </tr>
-              ))
+      <div className="card">
+        <div className="card-header d-flex align-items-center">
+          <FiUser className="me-2" />
+          <h5 className="mb-0">Gerenciamento de Usuários</h5>
+        </div>
+        
+        <div className="card-body">
+          {error && (
+            <div className="alert alert-danger d-flex justify-content-between align-items-center">
+              <span>{error}</span>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setError(null)}
+              />
+            </div>
+          )}
+          
+          <div className="d-flex justify-content-between mb-4">
+            <button 
+              className="btn btn-primary"
+              onClick={fetchUsers}
+              disabled={loading}
+            >
+              <FiRefreshCw className={`me-1 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </button>
+            
+            {currentUser && (
+              <button 
+                className="btn btn-success"
+                onClick={() => setShowRegisterModal(true)}
+                disabled={loading}
+              >
+                <FiPlus className="me-1" />
+                Novo Usuário
+              </button>
             )}
-          </tbody>
-        </table>
+          </div>
 
-        {error && (
-          <div className="alert alert-danger mt-4">{error}</div>
-        )}
+          <div className="table-responsive">
+            <table className="table table-striped table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Tipo</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && users.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center py-4">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="text-center py-4">
+                      Nenhum usuário encontrado
+                    </td>
+                  </tr>
+                ) : (
+                  users.map(user => (
+                    <tr key={user.uid}>
+                      <td>{user.displayName || '-'}</td>
+                      <td>{user.email}</td>
+                      <td>
+                        <span className={`badge ${user.role === 'admin' ? 'bg-primary' : 'bg-secondary'}`}>
+                          {user.role === 'admin' ? 'Administrador' : 'Usuário'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <button 
+                            className="btn btn-sm btn-outline-primary"
+                            disabled={loading}
+                          >
+                            <FiEdit />
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => confirmDelete(user)}
+                            disabled={loading}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
