@@ -1,6 +1,11 @@
-import { FiGrid } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
-import { addCategory, getCategories } from '../../../services/firebase_categories';
+import { FiGrid, FiEdit, FiTrash2, FiX, FiAlertTriangle } from 'react-icons/fi';
+import { 
+  getCategories, 
+  addCategory, 
+  updateCategory, 
+  deleteCategory 
+} from '../../../services/firebase_categories';
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -8,32 +13,28 @@ const CategoryManagement = () => {
     name: '',
     description: ''
   });
+  const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
-  // Carrega categorias ao montar o componente
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const loadedCategories = await getCategories();
-        
-        if (!loadedCategories) {
-          throw new Error('Nenhuma categoria encontrada');
-        }
-        
-        setCategories(loadedCategories);
-      } catch (error) {
-        console.error('Erro ao carregar categorias:', error);
-        setError(`Erro ao carregar categorias: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const loadedCategories = await getCategories();
+      setCategories(loadedCategories);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -45,40 +46,113 @@ const CategoryManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!newCategory.name.trim()) {
-      setError('O nome da categoria é obrigatório');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     
     try {
-      await addCategory({
-        name: newCategory.name.trim(),
-        description: newCategory.description.trim()
-      });
+      if (!newCategory.name.trim()) {
+        throw new Error('O nome da categoria é obrigatório');
+      }
 
-      // Recarrega as categorias após adicionar
-      const updatedCategories = await getCategories();
-      setCategories(updatedCategories || []);
+      if (editingId) {
+        await updateCategory(editingId, newCategory);
+      } else {
+        await addCategory(newCategory);
+      }
 
-      setNewCategory({
-        name: '',
-        description: ''
-      });
-
+      await loadCategories();
+      resetForm();
     } catch (error) {
-      console.error('Erro ao adicionar categoria:', error);
-      setError(`Erro ao adicionar categoria: ${error.message}`);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleEdit = (category) => {
+    setEditingId(category.id);
+    setNewCategory({
+      name: category.name,
+      description: category.description || ''
+    });
+  };
+
+  const confirmDelete = (category) => {
+    setCategoryToDelete(category);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      await deleteCategory(categoryToDelete.id);
+      await loadCategories();
+      setShowDeleteModal(false);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setNewCategory({
+      name: '',
+      description: ''
+    });
+    setEditingId(null);
+  };
+
   return (
     <div className="container mt-4">
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && (
+        <div className="modal fade show" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header bg-danger text-white">
+                <h5 className="modal-title">
+                  <FiAlertTriangle className="me-2" />
+                  Confirmar Exclusão
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close btn-close-white" 
+                  onClick={() => setShowDeleteModal(false)}
+                />
+              </div>
+              <div className="modal-body">
+                <p>Tem certeza que deseja excluir a categoria <strong>{categoryToDelete?.name}</strong>?</p>
+                <p className="text-muted">Esta ação não pode ser desfeita.</p>
+              </div>
+              <div className="modal-footer">
+                <button 
+                  type="button" 
+                  className="btn btn-outline-secondary" 
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-danger" 
+                  onClick={handleDelete}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="spinner-border spinner-border-sm me-1" />
+                  ) : (
+                    <FiTrash2 className="me-1" />
+                  )}
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <div className="card-header d-flex align-items-center">
           <FiGrid className="me-2" />
@@ -87,21 +161,22 @@ const CategoryManagement = () => {
         
         <div className="card-body">
           {error && (
-            <div className="alert alert-danger">
-              {error}
+            <div className="alert alert-danger d-flex justify-content-between align-items-center">
+              <span>{error}</span>
               <button 
                 type="button" 
-                className="btn-close float-end" 
+                className="btn-close" 
                 onClick={() => setError(null)}
-                aria-label="Close"
-              ></button>
+              />
             </div>
           )}
           
           <form onSubmit={handleSubmit} className="mb-4">
             <div className="row g-3">
               <div className="col-md-5">
-                <label htmlFor="name" className="form-label">Nome da Categoria*</label>
+                <label htmlFor="name" className="form-label">
+                  Nome da Categoria*
+                </label>
                 <input
                   type="text"
                   className="form-control"
@@ -114,7 +189,9 @@ const CategoryManagement = () => {
                 />
               </div>
               <div className="col-md-5">
-                <label htmlFor="description" className="form-label">Descrição</label>
+                <label htmlFor="description" className="form-label">
+                  Descrição
+                </label>
                 <input
                   type="text"
                   className="form-control"
@@ -125,17 +202,27 @@ const CategoryManagement = () => {
                   disabled={loading}
                 />
               </div>
-              <div className="col-md-2 d-flex align-items-end">
+              <div className="col-md-2 d-flex align-items-end gap-2">
                 <button 
                   type="submit" 
-                  className="btn btn-primary w-100" 
+                  className="btn btn-primary flex-grow-1" 
                   disabled={loading}
                 >
                   {loading ? (
-                    <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span className="spinner-border spinner-border-sm me-1" />
                   ) : null}
-                  Adicionar
+                  {editingId ? 'Atualizar' : 'Adicionar'}
                 </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={resetForm}
+                    disabled={loading}
+                  >
+                    <FiX />
+                  </button>
+                )}
               </div>
             </div>
           </form>
@@ -145,7 +232,7 @@ const CategoryManagement = () => {
               <thead className="table-light">
                 <tr>
                   <th>Nome</th>
-                  <th>Produtos</th>
+                  <th>Descrição</th>
                   <th>Ações</th>
                 </tr>
               </thead>
@@ -168,24 +255,24 @@ const CategoryManagement = () => {
                   categories.map(category => (
                     <tr key={category.id}>
                       <td>{category.name}</td>
+                      <td>{category.description || '-'}</td>
                       <td>
-                        <span className="badge bg-secondary">
-                          {category.products || 0}
-                        </span>
-                      </td>
-                      <td>
-                        <button 
-                          className="btn btn-sm btn-outline-primary me-2"
-                          disabled={loading}
-                        >
-                          Editar
-                        </button>
-                        <button 
-                          className="btn btn-sm btn-outline-danger"
-                          disabled={loading}
-                        >
-                          Excluir
-                        </button>
+                        <div className="d-flex gap-2">
+                          <button 
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleEdit(category)}
+                            disabled={loading}
+                          >
+                            <FiEdit />
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => confirmDelete(category)}
+                            disabled={loading}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
