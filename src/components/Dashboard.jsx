@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FiMenu, 
   FiX, 
@@ -21,6 +21,7 @@ import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import UserManagement from "./Dashboard/screens/UserManagement";
 import CategoryManagement from './Dashboard/screens/CategoryManagement';
+import ProductManagement from './Dashboard/screens/ProductManagement';
 
 const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -54,6 +55,7 @@ const Dashboard = () => {
         return <UserManagement />; 
       case 'products':
         return <ProductManagement />;
+          
       case 'categories':
         return <CategoryManagement />;
       case 'orders':
@@ -67,6 +69,36 @@ const Dashboard = () => {
         return <DashboardHome />;
     }
   };
+
+
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="alert alert-danger">
+          Ocorreu um erro inesperado. Por favor, recarregue a página.
+        </div>
+      );
+    }
+
+    return this.props.children; 
+  }
+}
+
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -461,7 +493,7 @@ const DashboardHome = () => {
       </div>
     </div>
   );
-};*/}
+};
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([
@@ -520,7 +552,7 @@ const ProductManagement = () => {
   );
 };
 
-{/*const CategoryManagement = () => {
+const CategoryManagement = () => {
   const [categories, setCategories] = useState([
     { id: 1, name: 'Peças', products: 45 },
     { id: 2, name: 'Acessórios', products: 32 },

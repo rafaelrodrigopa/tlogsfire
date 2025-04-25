@@ -47,7 +47,20 @@ export const uploadImage = async (file) => {
     }
   };
 
-  
+  export const categoryService = {
+    async getCategories() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'categories'));
+        return querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error("Erro ao buscar categorias: ", error);
+        throw error;
+      }
+    }
+  };
 
 export const deleteImage = async (imageUrl) => {
   try {

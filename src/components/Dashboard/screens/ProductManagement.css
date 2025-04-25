@@ -1,0 +1,39 @@
+.modal {
+    transition: opacity 0.3s ease;
+  }
+  .modal-backdrop {
+    transition: opacity 0.3s ease;
+  }
+  /* Adicione ao seu CSS */
+.img-thumbnail {
+    transition: all 0.3s ease;
+  }
+  
+  .btn-upload {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .btn-upload input[type="file"] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+  }
+  .btn.disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .spinner-border {
+    vertical-align: middle;
+  }
