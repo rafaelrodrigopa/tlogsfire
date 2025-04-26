@@ -33,17 +33,18 @@ export const productService = {
     }
   },
 
-  // Atualizar produto
   async updateProduct(productId, updatedData) {
     try {
-      await updateDoc(doc(productsCollection, productId), updatedData);
+      const productRef = doc(db, 'products', productId);
+      await updateDoc(productRef, updatedData);
     } catch (error) {
-      console.error("Erro ao atualizar produto: ", error);
-      throw error;
+      console.error("Erro ao atualizar produto:", error);
+      throw new Error("Falha ao atualizar produto");
     }
   },
 
   
+  // Deletar produto (ou marcar como inativo)
   async deleteProduct(productId, imageUrl) {
     try {
       // Deleta do Firestore
@@ -51,18 +52,11 @@ export const productService = {
       
       // Se houver imagem, deleta do Storage
       if (imageUrl) {
-        try {
-          // Extrai o path da URL completa
-          const imagePath = decodeURIComponent(imageUrl.split('/o/')[1].split('?')[0]);
-          const imageRef = ref(storage, imagePath);
-          await deleteObject(imageRef);
-        } catch (storageError) {
-          console.error("Erro ao deletar imagem:", storageError);
-          // Não interrompe o fluxo principal se falhar ao deletar a imagem
-        }
+        const imageRef = ref(storage, imageUrl);
+        await deleteObject(imageRef);
       }
     } catch (error) {
-      console.error("Erro ao deletar produto:", error);
+      console.error("Erro ao deletar:", error);
       throw error;
     }
   }

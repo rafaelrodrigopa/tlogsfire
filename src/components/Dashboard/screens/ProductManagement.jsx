@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../../firebase/config';
 
+
 const ProductManagement = () => {
   {/*Estados*/}
   const [products, setProducts] = useState([]);
@@ -20,6 +21,9 @@ const ProductManagement = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentProductId, setCurrentProductId] = useState(null);
 
   {/*Dados do formulário*/}
   const [formData, setFormData] = useState({
@@ -147,45 +151,69 @@ const handleImageUpload = async () => {
     });
   };
 
-{/*Atualize o handleSubmit*/}
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setIsSubmitting(true);
+      
+      let imageUrl = formData.imagem;
+      if (formData.imagemFile) {
+        imageUrl = await handleImageUpload();
+      }
   
-  try {
-    setIsSubmitting(true);
-    
-    let imageUrl = formData.imagem;
-    if (formData.imagemFile) {
-      imageUrl = await handleImageUpload();
+      const productData = {
+        ...formData,
+        imagem: imageUrl,
+        preco: parseFloat(formData.preco),
+        data_atualizacao: new Date()
+      };
+      
+      delete productData.imagemFile;
+  
+      if (isEditing) {
+        // Atualiza o produto existente
+        await productService.updateProduct(currentProductId, productData);
+        toast.success('Produto atualizado com sucesso!');
+      } else {
+        // Cria um novo produto
+        productData.data_cadastro = new Date();
+        await productService.addProduct(productData);
+        toast.success('Produto cadastrado com sucesso!');
+      }
+      
+      // Atualiza a lista de produtos
+      const updatedProducts = await productService.getProducts();
+      setProducts(updatedProducts);
+      
+      // Fecha o modal e reseta o estado
+      setShowModal(false);
+      resetForm();
+      setIsEditing(false);
+      setCurrentProductId(null);
+      
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    const productToSave = {
-      ...formData,
-      imagem: imageUrl,
-      preco: parseFloat(formData.preco),
-      data_cadastro: new Date()
-    };
-    
-    delete productToSave.imagemFile;
-    
-    await productService.addProduct(productToSave);
-    
-    // Atualiza a lista de produtos
-    const updatedProducts = await productService.getProducts();
-    setProducts(updatedProducts);
-    
-    toast.success('Produto cadastrado com sucesso!');
-    
-    // Fecha o modal e reseta o formulário
-    setShowModal(false);
-    resetForm();
-    
-  } catch (error) {
-    toast.error(error.message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  <div className="modal-header">
+  <h5 className="modal-title">
+    {isEditing ? 'Editar Produto' : 'Novo Produto'}
+  </h5>
+  <button 
+    type="button" 
+    className="btn-close" 
+    onClick={() => {
+      setShowModal(false);
+      setIsEditing(false);
+      setCurrentProductId(null);
+      resetForm();
+    }}
+  ></button>
+</div>
 
   
   {/*Função auxiliar para resetar o formulário*/}
@@ -203,6 +231,30 @@ const handleSubmit = async (e) => {
     });
     setCurrentModel('');
     setUploadProgress(0);
+    setIsEditing(false);
+    setCurrentProductId(null);
+  };
+
+
+
+  const handleEdit = (productId) => {
+    const productToEdit = products.find(p => p.id === productId);
+    if (productToEdit) {
+      setCurrentProductId(productId);
+      setIsEditing(true);
+      setFormData({
+        name: productToEdit.name,
+        description: productToEdit.description,
+        preco: productToEdit.preco.toString(),
+        id_categoria: productToEdit.id_categoria,
+        marca: productToEdit.marca || '',
+        modelos_compativeis: productToEdit.modelos_compativeis || [],
+        imagem: productToEdit.imagem || '',
+        ativo: productToEdit.ativo !== false,
+        imagemFile: null
+      });
+      setShowModal(true);
+    }
   };
 
   const handleDelete = async (productId) => {
@@ -225,6 +277,7 @@ const handleSubmit = async (e) => {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
+    
     <div className="container-fluid">
 
   
@@ -598,9 +651,12 @@ const handleSubmit = async (e) => {
                       </span>
                     </td>
                     <td>
-                      <button className="btn btn-sm btn-outline-primary me-1">
-                        <FiEdit2 />
-                      </button>
+                    <button 
+  className="btn btn-sm btn-outline-primary me-1"
+  onClick={() => handleEdit(product.id)}
+>
+  <FiEdit2 />
+</button>
                       {/*Modifique o botão de deletar na tabela:*/}
 <button 
   className="btn btn-sm btn-outline-danger"
