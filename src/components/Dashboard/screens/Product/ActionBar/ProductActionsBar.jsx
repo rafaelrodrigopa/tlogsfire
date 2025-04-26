@@ -25,7 +25,7 @@ const ProductActionsBar = ({
         onClick={onAddNew}
       >
         <FiPlus size={18} />
-        Adicionar Novo Produto
+        Novo Produto/Serviço
       </button>
     </div>
   );
