@@ -34,9 +34,10 @@ const ProductManagement = () => {
     marca: '',
     modelos_compativeis: [],
     imagem: '',
+    estoque: 0, // Novo campo
     ativo: true,
     imagemFile: null 
-  });
+  }); 
 
   {/*Carrega dados iniciais*/}
   useEffect(() => {
@@ -166,27 +167,24 @@ const handleImageUpload = async () => {
         ...formData,
         imagem: imageUrl,
         preco: parseFloat(formData.preco),
+        estoque: parseInt(formData.estoque) || 0, // Garante que estoque seja número
         data_atualizacao: new Date()
       };
       
       delete productData.imagemFile;
   
       if (isEditing) {
-        // Atualiza o produto existente
         await productService.updateProduct(currentProductId, productData);
         toast.success('Produto atualizado com sucesso!');
       } else {
-        // Cria um novo produto
         productData.data_cadastro = new Date();
         await productService.addProduct(productData);
         toast.success('Produto cadastrado com sucesso!');
       }
       
-      // Atualiza a lista de produtos
       const updatedProducts = await productService.getProducts();
       setProducts(updatedProducts);
       
-      // Fecha o modal e reseta o estado
       setShowModal(false);
       resetForm();
       setIsEditing(false);
@@ -226,6 +224,7 @@ const handleImageUpload = async () => {
       marca: '',
       modelos_compativeis: [],
       imagem: '',
+      estoque: 0, // Novo campo
       ativo: true,
       imagemFile: null
     });
@@ -250,6 +249,7 @@ const handleImageUpload = async () => {
         marca: productToEdit.marca || '',
         modelos_compativeis: productToEdit.modelos_compativeis || [],
         imagem: productToEdit.imagem || '',
+        estoque: productToEdit.estoque || 0, // Novo campo
         ativo: productToEdit.ativo !== false,
         imagemFile: null
       });
@@ -429,6 +429,18 @@ const handleImageUpload = async () => {
                       required
                     />
                   </div>
+
+                  <div className="col-md-6">
+  <label className="form-label">Estoque *</label>
+  <input
+    type="number"
+    className="form-control"
+    min="0"
+    value={formData.estoque}
+    onChange={(e) => setFormData({...formData, estoque: e.target.value})}
+    required
+  />
+</div>
                   
                   <div className="col-md-6">
                     <label className="form-label">Marca</label>
@@ -611,16 +623,17 @@ const handleImageUpload = async () => {
         <div className="card-body">
           <div className="table-responsive">
             <table className="table table-hover">
-              <thead>
-                <tr>
-                  <th>Imagem</th>
-                  <th>Nome</th>
-                  <th>Preço</th>
-                  <th>Categoria</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
+            <thead>
+  <tr>
+    <th>Imagem</th>
+    <th>Nome</th>
+    <th>Preço</th>
+    <th>Estoque</th> {/* Nova coluna */}
+    <th>Categoria</th>
+    <th>Status</th>
+    <th>Ações</th>
+  </tr>
+</thead>
               <tbody>
                 {products.map(product => (
                   <tr key={product.id}>
@@ -641,6 +654,11 @@ const handleImageUpload = async () => {
                     </td>
                     <td>{product.name}</td>
                     <td>R$ {product.preco?.toFixed(2)}</td>
+                    <td>
+  <span className={`badge ${product.estoque > 0 ? 'bg-success' : 'bg-warning'}`}>
+    {product.estoque || 0}
+  </span>
+</td>
                     <td>
                       {categories.find(c => c.id === product.id_categoria)?.nome || 
                        categories.find(c => c.id === product.id_categoria)?.name || '-'}
