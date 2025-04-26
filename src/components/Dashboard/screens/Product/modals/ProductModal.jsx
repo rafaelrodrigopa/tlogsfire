@@ -183,15 +183,29 @@ const ProductModal = ({
                   />
                 </div>
                 
-                <div className="col-md-6">
-                  <label className="form-label">Marca</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={formData.marca}
-                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
-                  />
-                </div>
+                <div className="row align-items-end g-3">
+  <div className="col-md-8">
+    <label className="form-label">Marca</label>
+    <input
+      type="text"
+      className="form-control"
+      value={formData.marca}
+      onChange={(e) => setFormData({...formData, marca: e.target.value})}
+    />
+  </div>
+
+  <div className="col-md-4">
+    <label className="form-label">Tipo</label>
+    <select
+      className="form-select"
+      value={formData.tipo || 'Produto'}
+      onChange={(e) => setFormData({...formData, tipo: e.target.value})}
+    >
+      <option value="Produto">Produto</option>
+      <option value="Serviço">Serviço</option>
+    </select>
+  </div>
+</div>
                 
                 <div className="col-12">
                   <label className="form-label">Modelos Compatíveis</label>
