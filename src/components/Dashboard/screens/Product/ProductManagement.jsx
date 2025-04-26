@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { FiPackage, FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
-import { productService } from '../../../services/firebase_products';
-import { categoryService } from '../../../services/firebase_categories';
+import { productService } from '../../../../services/firebase_products';
+import { categoryService } from '../../../../services/firebase_categories';
 import { toast } from 'react-toastify';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../../firebase/config';
+import { storage } from '../../../../firebase/config';
 import ProductModal from './modals/ProductModal';
-import DeleteConfirmationModal from './modals/DeleteConfirmationModal';
-import ProductStatisticsCards from './components/ProductStatisticsCards';
-import ProductDataTable from './components/ProductDataTable';
-import ProductActionBar from './components/ProductActionBar';
+import DeleteConfirmationModal from './modals/DeleteModal';
+import ProductStatisticsCards from './Card/ProductStatsCards';
+import ProductDataTable from './Table/ProductTable';
+import ProductActionBar from './ActionBar/ProductActionsBar';
 
 const ProductManagement = () => {
   // Estados de controle da aplicação

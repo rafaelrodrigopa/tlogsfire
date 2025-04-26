@@ -737,7 +737,7 @@ const handleImageUpload = async () => {
             <thead>
   <tr>
     <th>Imagem</th>
-    <th>Nome</th>
+    <th>Nome fd</th>
     <th>Preço</th>
     <th>Estoque</th> {/* Nova coluna */}
     <th>Categoria</th>

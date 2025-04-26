@@ -12,6 +12,7 @@ const ProductTable = ({
         <thead className="table-light">
           <tr>
             <th style={{ width: '80px' }}>Imagem</th>
+            <th>Tipo</th>
             <th>Nome</th>
             <th>Preço</th>
             <th>Estoque</th>
@@ -38,6 +39,9 @@ const ProductTable = ({
                       <FiPackage className="text-muted" size={20} />
                     </div>
                   )}
+                </td>
+                <td className="align-middle">
+                  {product.tipo || 'Não especificado'}
                 </td>
                 <td className="align-middle">{product.name}</td>
                 <td className="align-middle">
@@ -81,7 +85,7 @@ const ProductTable = ({
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="text-center py-4 text-muted">
+              <td colSpan="8" className="text-center py-4 text-muted">
                 Nenhum produto encontrado
               </td>
             </tr>

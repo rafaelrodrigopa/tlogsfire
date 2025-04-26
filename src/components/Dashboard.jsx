@@ -21,7 +21,7 @@ import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import UserManagement from "./Dashboard/screens/UserManagement";
 import CategoryManagement from './Dashboard/screens/CategoryManagement';
-import ProductManagement from './Dashboard/screens/ProductManagement';
+import ProductManagement from './Dashboard/screens/Product/ProductManagement';
 
 const Dashboard = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
