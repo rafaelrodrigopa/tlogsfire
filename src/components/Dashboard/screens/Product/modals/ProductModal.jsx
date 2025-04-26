@@ -1,5 +1,6 @@
 import { FiX, FiUpload } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useEffect } from 'react';
 
 const ProductModal = ({
   showModal,
@@ -21,6 +22,32 @@ const ProductModal = ({
   removeModel,
   resetForm
 }) => {
+
+  // Efeito para controlar o estoque baseado no tipo selecionado
+  useEffect(() => {
+    if (formData.tipo === 'Serviço') {
+      setFormData({
+        ...formData,
+        estoque: 1
+      });
+    } else if (formData.tipo === 'Produto' && formData.estoque === 1) {
+      // Só reseta se o estoque estiver em 1 (para não perder valores existentes ao editar)
+      setFormData({
+        ...formData,
+        estoque: formData.estoque || 0
+      });
+    }
+  }, [formData.tipo]);
+
+  // Função para validar o estoque (não permitir números negativos)
+  const handleEstoqueChange = (e) => {
+    const value = Math.max(0, parseInt(e.target.value) || 0);
+    setFormData({
+      ...formData,
+      estoque: value
+    });
+  };
+
   return (
     <div className={`modal fade ${showModal ? 'show d-block' : ''}`} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
       <div className="modal-dialog modal-lg">
@@ -172,40 +199,40 @@ const ProductModal = ({
                 </div>
 
                 <div className="col-md-6">
+                  <label className="form-label">Tipo *</label>
+                  <select
+                    className="form-select"
+                    value={formData.tipo || 'Produto'}
+                    onChange={(e) => setFormData({...formData, tipo: e.target.value})}
+                    required
+                  >
+                    <option value="Produto">Produto</option>
+                    <option value="Serviço">Serviço</option>
+                  </select>
+                </div>
+                
+                <div className="col-md-6">
                   <label className="form-label">Estoque *</label>
                   <input
                     type="number"
                     className="form-control"
                     min="0"
                     value={formData.estoque}
-                    onChange={(e) => setFormData({...formData, estoque: e.target.value})}
+                    onChange={handleEstoqueChange}
                     required
+                    disabled={formData.tipo === 'Serviço'}
                   />
                 </div>
-                
-                <div className="row align-items-end g-3">
-  <div className="col-md-8">
-    <label className="form-label">Marca</label>
-    <input
-      type="text"
-      className="form-control"
-      value={formData.marca}
-      onChange={(e) => setFormData({...formData, marca: e.target.value})}
-    />
-  </div>
 
-  <div className="col-md-4">
-    <label className="form-label">Tipo</label>
-    <select
-      className="form-select"
-      value={formData.tipo || 'Produto'}
-      onChange={(e) => setFormData({...formData, tipo: e.target.value})}
-    >
-      <option value="Produto">Produto</option>
-      <option value="Serviço">Serviço</option>
-    </select>
-  </div>
-</div>
+                <div className="col-md-6">
+                  <label className="form-label">Marca</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={formData.marca}
+                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
+                  />
+                </div>
                 
                 <div className="col-12">
                   <label className="form-label">Modelos Compatíveis</label>
