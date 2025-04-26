@@ -272,7 +272,7 @@ class ErrorBoundary extends React.Component {
                 </button>
               </li>
 
-              <li className="nav-item mt-2">
+              {/*<li className="nav-item mt-2">
                 <button 
                   className="nav-link text-white text-start w-100 d-flex justify-content-between align-items-center"
                   onClick={() => setRelatoriosOpen(!relatoriosOpen)}
@@ -295,19 +295,20 @@ class ErrorBoundary extends React.Component {
                     </li>
                   </ul>
                 )}
-              </li>
+              </li>*/}
 
-              <li className="nav-item mt-2">
+              {/*<li className="nav-item mt-2" >
                 <button 
                   className={`nav-link text-white text-start w-100 ${activeMenu === 'settings' ? 'active bg-primary' : ''}`}
                   onClick={() => {
                     setActiveMenu('settings');
                     setMobileMenuOpen(false);
                   }}
+
                 >
                   <FiSettings className="me-2" /> Configurações
                 </button>
-              </li>
+              </li>*/}
             </ul>
           </div>
         </div>
