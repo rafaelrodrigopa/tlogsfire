@@ -23,7 +23,8 @@ const ProductTable = ({
             <th>Preço</th>
             <th>Estoque</th>
             <th>Categoria</th>
-            <th>Status</th>
+            <th>Ativo no Estoque</th>
+            <th>Ativo para Venda</th>
             <th style={{ width: '100px' }}>Ações</th>
           </tr>
         </thead>
@@ -70,6 +71,11 @@ const ProductTable = ({
                   </span>
                 </td>
                 <td className="align-middle">
+                  <span className={`badge ${product.ativoVenda ? 'bg-primary' : 'bg-light text-dark'}`}>
+                    {product.ativoVenda ? 'Sim' : 'Não'}
+                  </span>
+                </td>
+                <td className="align-middle">
                   <div className="d-flex gap-2">
                     <button
                       className="btn btn-sm btn-outline-primary p-1"
@@ -91,7 +97,7 @@ const ProductTable = ({
             ))
           ) : (
             <tr>
-              <td colSpan="8" className="text-center py-4 text-muted">
+              <td colSpan="9" className="text-center py-4 text-muted">
                 Nenhum produto encontrado
               </td>
             </tr>
