@@ -10,6 +10,7 @@ import DeleteConfirmationModal from './modals/DeleteModal';
 import ProductStatisticsCards from './Card/ProductStatsCards';
 import ProductDataTable from './Table/ProductTable';
 import ProductActionBar from './ActionBar/ProductActionsBar';
+import './ProductManagement.css'; // Importando o CSS para estilização
 
 const ProductManagement = () => {
   // Estados de controle da aplicação

@@ -6,6 +6,12 @@ const ProductTable = ({
   onEdit, 
   onDelete 
 }) => {
+  // Função para encontrar o nome da categoria
+  const getCategoryName = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.nome || category?.name || 'N/A';
+  };
+
   return (
     <div className="table-responsive">
       <table className="table table-hover mb-0">
@@ -56,7 +62,7 @@ const ProductTable = ({
                   </span>
                 </td>
                 <td className="align-middle">
-                  {categories.find(category => category.id === product.id_categoria)?.nome || 'N/A'}
+                  {getCategoryName(product.id_categoria)}
                 </td>
                 <td className="align-middle">
                   <span className={`badge ${product.ativo ? 'bg-success' : 'bg-secondary'}`}>
