@@ -25,6 +25,8 @@ const ProductManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentProductId, setCurrentProductId] = useState(null);
 
+  const [allProducts, setAllProducts] = useState([]);
+
   {/*Dados do formulário*/}
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +40,27 @@ const ProductManagement = () => {
     ativo: true,
     imagemFile: null 
   }); 
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          productService.getProducts(),
+          categoryService.getCategories()
+        ]);
+        setProducts(productsData);
+        setAllProducts(productsData); // Armazena todos os produtos
+        setCategories(categoriesData);
+      } catch (err) {
+        setError(err.message);
+        toast.error('Erro ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+  
 
   {/*Carrega dados iniciais*/}
   useEffect(() => {
@@ -595,29 +618,109 @@ const handleImageUpload = async () => {
 
 
       {/* Lista de Produtos */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gerenciamento de Produtos</h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            setShowModal(true);
-            setFormData({
-              name: '',
-              description: '',
-              preco: '',
-              id_categoria: '',
-              marca: '',
-              modelos_compativeis: [],
-              imagem: '',
-              ativo: true,
-              imagemFile: null
-            });
-            setCurrentModel('');
-          }}
-        >
-          <FiPlus className="me-1" /> Novo Produto
-        </button>
+      {/* Lista de Produtos - Cabeçalho com Cards e Filtro */}
+<div className="d-flex flex-column gap-3 mb-4">
+  <h2>Gerenciamento de Produtos</h2>
+  
+  <div className="row">
+    {/* Card: Total de Produtos */}
+    <div className="col-md-4">
+      <div className="card border-primary">
+        <div className="card-body">
+          <h5 className="card-title">Total de Produtos</h5>
+          <p className="card-text display-6">{products.length}</p>
+        </div>
       </div>
+    </div>
+    
+    {/* Card: Valor Total em Estoque */}
+    <div className="col-md-4">
+      <div className="card border-success">
+        <div className="card-body">
+          <h5 className="card-title">Valor Total em Estoque</h5>
+          <p className="card-text display-6">
+            R$ {products.reduce((total, product) => total + (product.preco * (product.estoque || 0)), 0).toFixed(2)}
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    {/* Card: Produtos Ativos/Inativos */}
+    <div className="col-md-4">
+      <div className="card border-info">
+        <div className="card-body">
+          <h5 className="card-title">Status dos Produtos</h5>
+          <div className="d-flex justify-content-between">
+            <div>
+              <span className="badge bg-success me-1">{products.filter(p => p.ativo).length}</span>
+              <span>Ativos</span>
+            </div>
+            <div>
+              <span className="badge bg-secondary me-1">{products.filter(p => !p.ativo).length}</span>
+              <span>Inativos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* Barra de Ações com Filtro e Botão */}
+  <div className="d-flex justify-content-between align-items-center">
+  <div className="w-50">
+    <div className="input-group">
+      <input
+        type="text"
+        className="form-control"
+        placeholder="Filtrar por nome, marca ou categoria..."
+        onChange={(e) => {
+          const searchTerm = e.target.value.toLowerCase();
+          
+          if (!searchTerm.trim()) {
+            setProducts(allProducts);
+            return;
+          }
+
+          setProducts(allProducts.filter(p => {
+            const category = categories.find(c => c.id === p.id_categoria);
+            return (
+              p.name.toLowerCase().includes(searchTerm) ||
+              (p.marca?.toLowerCase().includes(searchTerm)) ||
+              (category?.nome?.toLowerCase().includes(searchTerm)) ||
+              (category?.name?.toLowerCase().includes(searchTerm))
+            );
+          }));
+        }}
+      />
+      <button className="btn btn-outline-secondary" type="button">
+        <i className="bi bi-search"></i>
+      </button>
+    </div>
+  </div>
+    
+    <button 
+      className="btn btn-primary"
+      onClick={() => {
+        setShowModal(true);
+        setFormData({
+          name: '',
+          description: '',
+          preco: '',
+          id_categoria: '',
+          marca: '',
+          modelos_compativeis: [],
+          imagem: '',
+          estoque: 0,
+          ativo: true,
+          imagemFile: null
+        });
+        setCurrentModel('');
+      }}
+    >
+      <FiPlus className="me-1" /> Novo Produto
+    </button>
+  </div>
+</div>
       
       <div className="card">
         <div className="card-body">
