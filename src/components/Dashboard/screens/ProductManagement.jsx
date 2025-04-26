@@ -764,7 +764,12 @@ const handleImageUpload = async () => {
                       )}
                     </td>
                     <td>{product.name}</td>
-                    <td>R$ {product.preco?.toFixed(2)}</td>
+                    <td>
+  <span className={`badge ${product.estoque > 0 ? 'bg-success' : 'bg-warning'}`}>
+    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.preco || 0)}
+  </span>
+</td>
+
                     <td>
   <span className={`badge ${product.estoque > 0 ? 'bg-success' : 'bg-warning'}`}>
     {product.estoque || 0}
