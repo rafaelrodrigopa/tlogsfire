@@ -26,6 +26,8 @@ const ProductManagement = () => {
   const [currentProductId, setCurrentProductId] = useState(null);
 
   const [allProducts, setAllProducts] = useState([]);
+  const [userRole, setUserRole] = useState('user'); // 'admin' ou 'user' - você precisará obter isso do seu sistema de autenticação
+
 
   {/*Dados do formulário*/}
   const [formData, setFormData] = useState({
@@ -40,6 +42,8 @@ const ProductManagement = () => {
     ativo: true,
     imagemFile: null 
   }); 
+
+  
 
   useEffect(() => {
     const loadData = async () => {
@@ -622,6 +626,7 @@ const handleImageUpload = async () => {
 <div className="d-flex flex-column gap-3 mb-4">
   <h2>Gerenciamento de Produtos</h2>
   
+  
   <div className="row">
     {/* Card: Total de Produtos */}
     <div className="col-md-4">
@@ -635,15 +640,18 @@ const handleImageUpload = async () => {
     
     {/* Card: Valor Total em Estoque */}
     <div className="col-md-4">
-      <div className="card border-success">
-        <div className="card-body">
-          <h5 className="card-title">Valor Total em Estoque</h5>
-          <p className="card-text display-6">
-            R$ {products.reduce((total, product) => total + (product.preco * (product.estoque || 0)), 0).toFixed(2)}
-          </p>
-        </div>
-      </div>
+  <div className="card border-success">
+    <div className="card-body">
+      <h5 className="card-title">Valor Total em Estoque</h5>
+      <p className="card-text display-6">
+        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+          products.reduce((total, product) => total + (product.preco * (product.estoque || 0)), 0)
+        )}
+      </p>
     </div>
+  </div>
+</div>
+
     
     {/* Card: Produtos Ativos/Inativos */}
     <div className="col-md-4">
