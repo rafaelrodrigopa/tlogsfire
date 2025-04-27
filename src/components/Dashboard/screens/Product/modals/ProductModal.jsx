@@ -199,17 +199,19 @@ const ProductModal = ({
                 </div>
 
                 <div className="col-md-6">
-                  <label className="form-label">Tipo *</label>
-                  <select
-                    className="form-select"
-                    value={formData.tipo || 'Produto'}
-                    onChange={(e) => setFormData({...formData, tipo: e.target.value})}
-                    required
-                  >
-                    <option value="Produto">Produto</option>
-                    <option value="Serviço">Serviço</option>
-                  </select>
-                </div>
+  <label className="form-label">Tipo *</label>
+  <select
+    className="form-select"
+    value={formData.tipo || ''}
+    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+    required
+  >
+    <option value="">Selecione o tipo</option>
+    <option value="Produto">Produto</option>
+    <option value="Serviço">Serviço</option>
+  </select>
+</div>
+
                 
                 <div className="col-md-6">
                   <label className="form-label">Estoque *</label>
