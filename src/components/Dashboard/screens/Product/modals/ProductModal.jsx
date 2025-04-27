@@ -23,30 +23,59 @@ const ProductModal = ({
   resetForm
 }) => {
 
-  // Efeito para controlar o estoque baseado no tipo selecionado
+  const prepareFormData = (data) => ({
+    name: data.name || '',
+    preco: data.preco || '',
+    id_categoria: data.id_categoria || '',
+    tipo: data.tipo || '',
+    estoque: typeof data.estoque === 'number' ? data.estoque : 0,
+    marca: data.marca || '',
+    modelos_compativeis: data.modelos_compativeis || [],
+    description: data.description || '',
+    imagem: data.imagem || '',
+    imagemFile: data.imagemFile || null,
+    ativo: typeof data.ativo === 'boolean' ? data.ativo : true,
+    ativoVenda: typeof data.ativoVenda === 'boolean' ? data.ativoVenda : false,
+  });
+
+  // Atualizar corretamente o formData para edição
+  useEffect(() => {
+    if (isEditing && formData) {
+      setFormData(prepareFormData(formData));
+    }
+  }, [isEditing, formData, setFormData]);
+
+  // Corrige estoque baseado no tipo
   useEffect(() => {
     if (formData.tipo === 'Serviço') {
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         estoque: 1
-      });
-    } else if (formData.tipo === 'Produto' && formData.estoque === 1) {
-      // Só reseta se o estoque estiver em 1 (para não perder valores existentes ao editar)
-      setFormData({
-        ...formData,
-        estoque: formData.estoque || 0
-      });
+      }));
+    } else if (formData.tipo === 'Produto' && (formData.estoque === 1 || formData.estoque === 0)) {
+      setFormData(prev => ({
+        ...prev,
+        estoque: prev.estoque || 0
+      }));
     }
-  }, [formData.tipo]);
+  }, [formData.tipo, setFormData]);
 
-  // Função para validar o estoque (não permitir números negativos)
   const handleEstoqueChange = (e) => {
     const value = Math.max(0, parseInt(e.target.value) || 0);
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       estoque: value
-    });
+    }));
   };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    removeImage();
+    resetForm();
+  };
+
+  // Validação básica do formulário
+  const isFormValid = formData.name && formData.preco && formData.tipo && formData.id_categoria;
 
   return (
     <div className={`modal fade ${showModal ? 'show d-block' : ''}`} style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -54,18 +83,15 @@ const ProductModal = ({
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">{isEditing ? 'Editar Produto' : 'Novo Produto'}</h5>
-            <button 
-              type="button" 
-              className="btn-close" 
-              onClick={() => {
-                setShowModal(false);
-                resetForm();
-              }}
-            ></button>
+            <button type="button" className="btn-close" onClick={handleCloseModal}></button>
           </div>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
+
+              {/* Upload de Imagem */}
+              {/* ... (mantive tudo igual aqui como estava no seu código anterior) */}
+
               <div className="mb-4">
                 <label className="form-label">Imagem do Produto</label>
                 <div className="d-flex align-items-start gap-3">
@@ -137,7 +163,7 @@ const ProductModal = ({
                           <FiX className="me-1" />
                           Cancelar
                         </button>
-                        
+
                         {uploadingImage && (
                           <div className="progress mt-2">
                             <div
@@ -156,24 +182,27 @@ const ProductModal = ({
                 </div>
               </div>
 
+              {/* Formulário Principal */}
               <div className="row g-3">
+                {/* Nome */}
                 <div className="col-md-6">
                   <label className="form-label">Nome do Produto *</label>
                   <input
                     type="text"
                     className="form-control"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     required
                   />
                 </div>
-                
+
+                {/* Categoria */}
                 <div className="col-md-6">
                   <label className="form-label">Categoria *</label>
                   <select
                     className="form-select"
                     value={formData.id_categoria}
-                    onChange={(e) => setFormData({...formData, id_categoria: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({ ...prev, id_categoria: e.target.value }))}
                     required
                   >
                     <option value="">Selecione...</option>
@@ -184,7 +213,8 @@ const ProductModal = ({
                     ))}
                   </select>
                 </div>
-                
+
+                {/* Preço */}
                 <div className="col-md-6">
                   <label className="form-label">Preço *</label>
                   <input
@@ -193,26 +223,27 @@ const ProductModal = ({
                     step="0.01"
                     min="0"
                     value={formData.preco}
-                    onChange={(e) => setFormData({...formData, preco: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({ ...prev, preco: e.target.value }))}
                     required
                   />
                 </div>
 
+                {/* Tipo */}
                 <div className="col-md-6">
-  <label className="form-label">Tipo *</label>
-  <select
-    className="form-select"
-    value={formData.tipo || ''}
-    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-    required
-  >
-    <option value="">Selecione o tipo</option>
-    <option value="Produto">Produto</option>
-    <option value="Serviço">Serviço</option>
-  </select>
-</div>
+                  <label className="form-label">Tipo *</label>
+                  <select
+                    className="form-select"
+                    value={formData.tipo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value }))}
+                    required
+                  >
+                    <option value="">Selecione o tipo</option>
+                    <option value="Produto">Produto</option>
+                    <option value="Serviço">Serviço</option>
+                  </select>
+                </div>
 
-                
+                {/* Estoque */}
                 <div className="col-md-6">
                   <label className="form-label">Estoque *</label>
                   <input
@@ -226,16 +257,18 @@ const ProductModal = ({
                   />
                 </div>
 
+                {/* Marca */}
                 <div className="col-md-6">
                   <label className="form-label">Marca</label>
                   <input
                     type="text"
                     className="form-control"
                     value={formData.marca}
-                    onChange={(e) => setFormData({...formData, marca: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({ ...prev, marca: e.target.value }))}
                   />
                 </div>
-                
+
+                {/* Modelos Compatíveis */}
                 <div className="col-12">
                   <label className="form-label">Modelos Compatíveis</label>
                   <div className="input-group mb-2">
@@ -255,7 +288,6 @@ const ProductModal = ({
                       Adicionar
                     </button>
                   </div>
-                  
                   {formData.modelos_compativeis.length > 0 && (
                     <div className="d-flex flex-wrap gap-2">
                       {formData.modelos_compativeis.map((model, index) => (
@@ -273,47 +305,59 @@ const ProductModal = ({
                     </div>
                   )}
                 </div>
-                
+
+                {/* Descrição */}
                 <div className="col-12">
                   <label className="form-label">Descrição</label>
                   <textarea
                     className="form-control"
                     rows="3"
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   ></textarea>
                 </div>
-                
+
+                {/* Checkboxes */}
                 <div className="col-12">
                   <div className="form-check">
                     <input
                       type="checkbox"
                       className="form-check-input"
                       checked={formData.ativo}
-                      onChange={(e) => setFormData({...formData, ativo: e.target.checked})}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
                     />
                     <label className="form-check-label">Produto ativo</label>
                   </div>
                 </div>
+
+                <div className="col-12">
+                  <div className="form-check">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={formData.ativoVenda}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ativoVenda: e.target.checked }))}
+                    />
+                    <label className="form-check-label">Ativo para venda</label>
+                  </div>
+                </div>
               </div>
+
             </div>
-            
+
             <div className="modal-footer">
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={() => {
-                  setShowModal(false);
-                  removeImage();
-                }}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleCloseModal}
                 disabled={uploadingImage}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className={`btn btn-primary ${isSubmitting ? 'disabled' : ''}`}
-                disabled={isSubmitting || uploadingImage}
+                className={`btn btn-primary ${(!isFormValid || isSubmitting || uploadingImage) ? 'disabled' : ''}`}
+                disabled={!isFormValid || isSubmitting || uploadingImage}
               >
                 {isSubmitting ? (
                   <>
@@ -325,6 +369,7 @@ const ProductModal = ({
                 )}
               </button>
             </div>
+
           </form>
         </div>
       </div>
